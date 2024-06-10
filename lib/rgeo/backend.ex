@@ -25,7 +25,7 @@ defmodule RGeo.Backend do
   @spec location_at(Geo.Point.t()) ::
           {:ok, %RGeo.Location{}} | {:error, :not_found} | {:error, :loading}
   def location_at(%Geo.Point{} = point) do
-    GenServer.call(__MODULE__, {:location_at, point})
+    GenServer.call(__MODULE__, {:location_at, point}, 100)
   catch
     :exit, _ -> {:error, :loading}
   end
