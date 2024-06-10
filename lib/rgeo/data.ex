@@ -43,7 +43,14 @@ defmodule RGeo.Data do
           region: geometry.properties["REGION_UN"],
           subregion: geometry.properties["SUBREGION"],
           province: geometry.properties["name"],
-          city: String.trim_trailing(geometry.properties["name_conve"] || "", "2")
+          city:
+            Map.get(geometry.properties, "name_conve", "")
+            |> String.trim_trailing("2")
+            |> String.trim_trailing("1")
+            |> case do
+              "" -> nil
+              city -> city
+            end
         })
 
       try do
