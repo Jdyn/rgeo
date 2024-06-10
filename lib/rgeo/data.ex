@@ -4,7 +4,7 @@ defmodule RGeo.Data do
 
   @type datasets :: list({scope(), resolution()})
 
-  @resolution 4
+  @resolution 5
 
   @spec load(options :: datasets()) :: {:ok, map()}
   def load(options \\ []) do
@@ -45,8 +45,8 @@ defmodule RGeo.Data do
           province: geometry.properties["name"],
           city:
             Map.get(geometry.properties, "name_conve", "")
-            |> String.trim_trailing("2")
-            |> String.trim_trailing("1")
+            # |> String.trim_trailing("2")
+            # |> String.trim_trailing("1")
             |> case do
               "" -> nil
               city -> city
@@ -66,8 +66,8 @@ defmodule RGeo.Data do
           end
 
         Enum.reduce(cells, geo_data, fn cell, acc ->
-          value = Map.drop(geometry, [:coordinates])
-          Map.update(acc, cell, [value], fn existing -> [value | existing] end)
+          # value = Map.drop(geometry, [:coordinates])
+          Map.update(acc, cell, [geometry], fn existing -> [geometry | existing] end)
         end)
       rescue
         _ ->
@@ -78,7 +78,7 @@ defmodule RGeo.Data do
 
   @spec parse_filename({scope(), resolution()}) :: String.t()
   defp parse_filename({scope, resolution})
-       when scope in [:cities, :provinces, :countries] and resolution in [10] do
+       when scope in [:cities, :provinces, :countries] and resolution in [10, 110] do
     "#{String.capitalize(Atom.to_string(scope))}#{resolution}.gz"
   end
 end

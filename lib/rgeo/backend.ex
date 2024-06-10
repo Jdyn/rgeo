@@ -1,7 +1,7 @@
 defmodule RGeo.Backend do
   use GenServer, restart: :permanent
 
-  @resolution 4
+  @resolution 5
 
   def start_link(options \\ [{:provinces, 10}, {:cities, 10}]) do
     GenServer.start_link(__MODULE__, options, name: __MODULE__)
@@ -22,9 +22,12 @@ defmodule RGeo.Backend do
     GenServer.call(__MODULE__, {:reverse_geocode, location})
   end
 
-  @spec location_at(Geo.Point.t()) :: {:ok, %RGeo.Location{}} | {:error, :unknown}
+  @spec location_at(Geo.Point.t()) ::
+          {:ok, %RGeo.Location{}} | {:error, :not_found} | {:error, :loading}
   def location_at(%Geo.Point{} = point) do
     GenServer.call(__MODULE__, {:location_at, point})
+  catch
+    :exit, _ -> {:error, :loading}
   end
 
   def handle_call({:location_at, point}, _from, state) do
@@ -32,18 +35,23 @@ defmodule RGeo.Backend do
 
     case Map.get(state, cell, nil) do
       nil ->
-        {:reply, {:error, :unknown}, state}
+        {:reply, {:error, :not_found}, state}
 
       geoemtries ->
-        IO.inspect(geoemtries)
-
         props =
-          Enum.reduce(geoemtries, %{}, fn geometries, acc ->
-            Map.merge(acc, geometries.properties, fn
-              _, v1, nil when not is_nil(v1) -> v1
-              _, nil, v2 when not is_nil(v2) -> v2
-              _, _, v2 -> v2
-            end)
+          Enum.reduce(geoemtries, %{}, fn geo, acc ->
+            case Topo.contains?(geo, point) do
+              true ->
+                Map.merge(acc, geo.properties, fn
+                  _, v1, nil when not is_nil(v1) -> v1
+                  _, nil, v2 when not is_nil(v2) -> v2
+                  _, nil, nil -> nil
+                  _, v1, _ -> v1
+                end)
+
+              false ->
+                acc
+            end
           end)
 
         {:reply, {:ok, struct(RGeo.Location, props)}, state}
