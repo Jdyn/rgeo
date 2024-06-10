@@ -2,7 +2,7 @@ defmodule RGeoTest do
   use ExUnit.Case
 
   setup do
-    {:ok, _pid} = RGeo.Backend.start_link()
+    {:ok, _pid} = RGeo.Backend.start_link([{:provinces, 10}, {:cities, 10}])
     :ok
   end
 

@@ -6,19 +6,17 @@ defmodule RGeo.Data do
 
   @type datasets :: list({scope(), resolution()})
 
-  @spec load() :: {:ok, map()}
-  def load() do
-    points = [{"Provinces", 10}, {"cities", 10}]
-
+  @spec load(options :: datasets()) :: {:ok, map()}
+  def load(options \\ [{:provinces, 10}]) do
     data =
-      Enum.reduce(points, %GeometryCollection{}, fn {scope, resolution}, acc ->
+      Enum.reduce(options, %GeometryCollection{}, fn {scope, resolution}, acc ->
         Map.put(acc, :geometries, acc.geometries ++ parse_data({scope, resolution}))
       end)
 
     {:ok, data}
   end
 
-  defp parse_data({scope, resolution}) when is_binary(scope) and is_number(resolution) do
+  defp parse_data({scope, resolution}) when is_atom(scope) and is_number(resolution) do
     RGeo.app_name()
     |> :code.priv_dir()
     |> List.to_string()
@@ -47,7 +45,9 @@ defmodule RGeo.Data do
     end)
   end
 
-  defp parse_filename({scope, resolution}) when is_binary(scope) and is_number(resolution) do
-    "#{String.capitalize(scope)}#{resolution}.gz"
+  @spec parse_filename({scope(), resolution()}) :: String.t()
+  defp parse_filename({scope, resolution})
+       when scope in [:cities, :provinces, :countries] and resolution in [10] do
+    "#{String.capitalize(Atom.to_string(scope))}#{resolution}.gz"
   end
 end

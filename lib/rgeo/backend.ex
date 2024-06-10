@@ -1,14 +1,13 @@
 defmodule RGeo.Backend do
-  use GenServer
+  use GenServer, restart: :permanent
 
-  def start_link(options \\ []) do
+  def start_link(options \\ [{:provinces, 10}, {:cities, 10}]) do
     GenServer.start_link(__MODULE__, options, name: __MODULE__)
   end
 
   @doc false
-  def init(_options) do
-    {:ok, state} = RGeo.Data.load()
-    {:ok, state}
+  def init(options) do
+    RGeo.Data.load(options)
   end
 
   def reverse_geocode(%RGeo.Location{} = location) do
