@@ -1,8 +1,12 @@
 defmodule RGeoTest do
   use ExUnit.Case
 
-  test "greets the world" do
-    RGeo.Backend.start_link()
+  setup do
+    {:ok, _pid} = RGeo.Backend.start_link()
+    :ok
+  end
+
+  test "Returns valid location for New York coordinates" do
     {:ok, result} = RGeo.location_at(%Geo.Point{coordinates: {-74.0060, 40.7128}})
 
     assert result == %RGeo.Location{
@@ -12,7 +16,9 @@ defmodule RGeoTest do
              country_code3: "USA",
              country_long: "United States of America",
              region: "Americas",
-             subregion: "Northern America"
+             subregion: "Northern America",
+             province: "New York",
+             city: "New York"
            }
   end
 end

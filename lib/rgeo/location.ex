@@ -6,7 +6,9 @@ defmodule RGeo.Location do
           country_code3: String.t(),
           continent: String.t(),
           region: String.t(),
-          subregion: String.t()
+          subregion: String.t(),
+          province: String.t(),
+          city: String.t()
         }
 
   @enforce_keys [
@@ -16,7 +18,9 @@ defmodule RGeo.Location do
     :country_code3,
     :continent,
     :region,
-    :subregion
+    :subregion,
+    :province,
+    :city
   ]
 
   defstruct @enforce_keys

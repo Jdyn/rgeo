@@ -7,16 +7,12 @@ defmodule RGeo.Backend do
 
   @doc false
   def init(_options) do
-    {:ok, [], {:continue, :load_data}}
+    {:ok, state} = RGeo.Data.load()
+    {:ok, state}
   end
 
   def reverse_geocode(%RGeo.Location{} = location) do
     GenServer.call(__MODULE__, {:reverse_geocode, location})
-  end
-
-  def handle_continue(:load_data, _state) do
-    {:ok, state} = RGeo.Data.load()
-    {:noreply, state}
   end
 
   @spec location_at(Geo.Point.t()) :: {:ok, %RGeo.Location{}} | {:error, :unknown}
@@ -26,17 +22,18 @@ defmodule RGeo.Backend do
 
   def handle_call({:location_at, point}, _from, state) do
     result =
-      state
-      |> Enum.reduce_while({:error, :unknown}, fn {_name, geometry}, _acc ->
-        case Topo.contains?(geometry, point) do
-          true ->
-            {:halt, {:ok, struct(RGeo.Location, geometry.properties)}}
-
-          false ->
-            {:cont, {:error, :unknown}}
-        end
+      state.geometries
+      |> Stream.filter(fn geometry -> Topo.contains?(geometry, point) end)
+      |> Stream.map(fn geometry -> geometry.properties end)
+      |> Enum.to_list()
+      |> Enum.reduce(%{}, fn geometries, acc ->
+        Map.merge(acc, geometries, fn
+          _, v1, nil when not is_nil(v1) -> v1
+          _, nil, v2 when not is_nil(v2) -> v2
+          _, _, v2 -> v2
+        end)
       end)
 
-    {:reply, result, state}
+    {:reply, {:ok, struct(RGeo.Location, result)}, state}
   end
 end
