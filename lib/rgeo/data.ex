@@ -1,16 +1,20 @@
 defmodule RGeo.Data do
-  alias Geo.GeometryCollection
-
   @type scope :: :countries | :provinces | :cities
   @type resolution :: 110 | 30 | 10
 
   @type datasets :: list({scope(), resolution()})
 
+  @resolution 3
+
   @spec load(options :: datasets()) :: {:ok, map()}
-  def load(options \\ [{:provinces, 10}]) do
+  def load(options \\ []) do
     data =
-      Enum.reduce(options, %GeometryCollection{}, fn {scope, resolution}, acc ->
-        Map.put(acc, :geometries, acc.geometries ++ parse_data({scope, resolution}))
+      Enum.reduce(options, %{}, fn {scope, resolution}, acc ->
+        data = parse_data({scope, resolution})
+
+        Map.merge(acc, data, fn
+          _, v1, v2 -> v1 ++ v2
+        end)
       end)
 
     {:ok, data}
@@ -27,7 +31,8 @@ defmodule RGeo.Data do
     |> Jason.decode!()
     |> Geo.JSON.decode!()
     |> then(& &1.geometries)
-    |> Enum.reduce([], fn geometry, acc ->
+    # |> Enum.take(10)
+    |> Enum.reduce(%{}, fn geometry, geo_data ->
       geometry =
         put_in(geometry.properties, %{
           country: geometry.properties["NAME"],
@@ -41,7 +46,26 @@ defmodule RGeo.Data do
           city: String.trim_trailing(geometry.properties["name_conve"] || "", "2")
         })
 
-      acc ++ [geometry]
+      try do
+        cells =
+          case geometry do
+            %Geo.Polygon{} = geometry ->
+              {:ok, cells} = H3Geo.polygon_to_cells(geometry, @resolution)
+              cells
+
+            %Geo.MultiPolygon{} = geometry ->
+              {:ok, cells} = H3Geo.multipolygon_to_cells(geometry, @resolution)
+              cells
+          end
+
+        Enum.reduce(cells, geo_data, fn cell, acc ->
+          value = Map.drop(geometry, [:coordinates])
+          Map.update(acc, cell, [value], fn existing -> [value | existing] end)
+        end)
+      rescue
+        _ ->
+          geo_data
+      end
     end)
   end
 

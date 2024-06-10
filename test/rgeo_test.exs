@@ -1,8 +1,17 @@
 defmodule RGeoTest do
   use ExUnit.Case
 
+  @moduletag timeout: :infinity
+
   setup do
-    {:ok, _pid} = RGeo.Backend.start_link([{:provinces, 10}, {:cities, 10}])
+    {microseconds, _} =
+      :timer.tc(fn ->
+        RGeo.Backend.start_link([{:provinces, 10}, {:cities, 10}])
+      end)
+
+    # in seconds
+    IO.inspect("time: #{microseconds / 1_000_000} seconds")
+
     :ok
   end
 

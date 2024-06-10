@@ -42,6 +42,7 @@ defmodule RGeo.MixProject do
       {:jason, "~> 1.4.1"},
       {:geo, "~> 3.6.0"},
       {:topo, "~> 1.0"},
+      {:h3geo, "~> 0.1.0"},
       {:ex_doc, "~> 0.32", only: :dev, runtime: false}
     ]
   end
