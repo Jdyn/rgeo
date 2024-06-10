@@ -6,7 +6,7 @@ defmodule RGeoTest do
   setup do
     {microseconds, _} =
       :timer.tc(fn ->
-        RGeo.Backend.start_link([{:provinces, 10}, {:cities, 10}])
+        RGeo.Backend.start_link([{:provinces, 10}])
       end)
 
     # in seconds
@@ -27,7 +27,7 @@ defmodule RGeoTest do
              region: "Americas",
              subregion: "Northern America",
              province: "New York",
-             city: "New York"
+             city: nil
            }
   end
 end

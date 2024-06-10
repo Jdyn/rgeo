@@ -4,7 +4,7 @@ defmodule RGeo.Data do
 
   @type datasets :: list({scope(), resolution()})
 
-  @resolution 5
+  @resolution 3
 
   @spec load(options :: datasets()) :: {:ok, map()}
   def load(options \\ []) do

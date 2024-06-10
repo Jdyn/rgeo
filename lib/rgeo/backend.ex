@@ -1,7 +1,7 @@
 defmodule RGeo.Backend do
   use GenServer, restart: :permanent
 
-  @resolution 5
+  @resolution 3
 
   def start_link(options \\ [{:provinces, 10}, {:cities, 10}]) do
     GenServer.start_link(__MODULE__, options, name: __MODULE__)
@@ -9,8 +9,8 @@ defmodule RGeo.Backend do
 
   @doc false
   def init(options) do
-    {:ok, %{}, {:continue, {:load, options}}}
-    # RGeo.Data.load(options)
+    # {:ok, %{}, {:continue, {:load, options}}}
+    RGeo.Data.load(options)
   end
 
   def handle_continue({:load, options}, _) do
@@ -46,7 +46,7 @@ defmodule RGeo.Backend do
                   _, v1, nil when not is_nil(v1) -> v1
                   _, nil, v2 when not is_nil(v2) -> v2
                   _, nil, nil -> nil
-                  _, v1, _ -> v1
+                  _, v1, _v2 -> v1
                 end)
 
               false ->
