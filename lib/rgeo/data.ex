@@ -31,7 +31,6 @@ defmodule RGeo.Data do
     |> Jason.decode!()
     |> Geo.JSON.decode!()
     |> then(& &1.geometries)
-    # |> Enum.take(10)
     |> Enum.reduce(%{}, fn geometry, geo_data ->
       geometry =
         put_in(geometry.properties, %{
@@ -66,7 +65,6 @@ defmodule RGeo.Data do
           end
 
         Enum.reduce(cells, geo_data, fn cell, acc ->
-          # value = Map.drop(geometry, [:coordinates])
           Map.update(acc, cell, [geometry], fn existing -> [geometry | existing] end)
         end)
       rescue

@@ -33,7 +33,8 @@ defmodule RGeo do
                 subregion: "Northern America"
               }}
   """
-  @spec location_at(Geo.Point.t()) :: {:ok, %RGeo.Location{}} | {:error, :unknown}
+  @spec location_at(Geo.Point.t()) ::
+          {:ok, %RGeo.Location{}} | {:error, :not_found} | {:error, :loading}
   def location_at(%Geo.Point{} = point) do
     RGeo.Backend.location_at(point)
   end
